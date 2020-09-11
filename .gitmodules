@@ -1,0 +1,3 @@
+[submodule "src/utils/Events"]
+	path = src/utils/Events
+	url = git@github.com:Glitnirian/Events.git
