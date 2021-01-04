@@ -39,45 +39,50 @@ export class ExecQueue<
         return this._queue;
     }
 
-    getEl(index: number) {
+    public getEl(index: number) {
         if (index < 0) index = this._queue.length + index;
         return this._queue[index];
     }
 
-    push(el: QueueEl) {
+    public push(el: QueueEl) {
         this._queue.push(el);
         this._process();
 
         return this;
     }
 
-    pushMany(els: QueueEl[]) {
+    public pushMany(els: QueueEl[]) {
         this._queue = this._queue.concat(els);
         this._process();
         
         return this;
     }
 
-    unshift(el: QueueEl) {
+    public unshift(el: QueueEl) {
         this._queue.unshift(el);
         this._process();
         return this;
     }
 
-    unshiftMany(els: QueueEl[]) {
+    public unshiftMany(els: QueueEl[]) {
         this._queue = els.concat(this._queue);
         this._process();
         return this;
     }
 
-    pause () {
+    public pause () {
         this._pause = true;
         return this;
     }
 
-    resume() {
+    public resume() {
         this._pause = false;
         this._process();
+        return this;
+    }
+
+    public setQueue(queue: QueueEl[]) {
+        this._queue = queue;
         return this;
     }
 
