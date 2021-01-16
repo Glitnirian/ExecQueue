@@ -1,7 +1,7 @@
 import { HoldBuffers } from "./types";
 import { EQ_Base } from "./Base";
 
-export abstract class EQ_HoldBuffer<QueueEl, ExtendingClass> extends EQ_Base<QueueEl>{
+export abstract class EQ_HoldBuffer<QueueEl> extends EQ_Base<QueueEl>{
     protected _holdBuffers: HoldBuffers<QueueEl> = {};
 
     createHoldBuffer(holdBufferName: string) {

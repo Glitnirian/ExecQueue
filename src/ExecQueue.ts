@@ -1,9 +1,9 @@
 import { ExecCallback, HoldBuffers } from './types';
-import { Events } from './utils/Events/src';
+import { Hooks } from 'hooksi';
 
 let resultId = 0;
 
-export interface ExecQueueEvents<QueueEl> {
+export interface IExecQueueEvents<QueueEl> {
     queueProcessed: () => void,
     elementProcessed: (processedEl: QueueEl) => void
 }
@@ -13,21 +13,20 @@ export interface ExecQueueOptions {
     multiProcessingNumber?: number,
 }
 
-export class ExecQueue<
-    QueueEl,
-    ExtraEvents extends {[eventName: string]: (...args: any[]) => void} = {}
-> extends Events<keyof ExecQueueEvents<QueueEl>, ExecQueueEvents<QueueEl>> {
+export class ExecQueue<QueueEl> {
     protected _queue: QueueEl[] = [];
     protected _pause: boolean = false;
     protected _execCallback?: ExecCallback<any, QueueEl>;
     protected _lastQueueLength: number = 0;
     protected _multiProcessingNumber: number;
     protected _inProcessingNumber: number = 0;
+    protected _hooks: Hooks<IExecQueueEvents<QueueEl>>;
+    private _isQueueProcessedHookExecuting: boolean = false;
 
     constructor(options?: ExecQueueOptions) {
-        super();
         options = options || {};
         this._multiProcessingNumber = options.multiProcessingNumber || 1;
+        this._hooks = new Hooks();
     }
 
     public bindExecCallback<CallbackQueueEl = QueueEl>(callback: ExecCallback<CallbackQueueEl, QueueEl>) {
@@ -92,6 +91,10 @@ export class ExecQueue<
 
     protected async _process() {
         if (this._queue.length > 0) {
+            if (this._isQueueProcessedHookExecuting) {
+                return;
+            }
+
             if (!this._pause && this._inProcessingNumber < this._multiProcessingNumber) {
                 this._lastQueueLength = this._queue.length;
 
@@ -103,9 +106,9 @@ export class ExecQueue<
                     resultId++;
 
                     Promise.resolve(execResult)
-                    .then(() => { // TODO: logic reverification
+                    .then(async () => { // TODO: logic reverification
                         this._inProcessingNumber--;
-                        this._execEvent<"elementProcessed">('elementProcessed', elToProcess);
+                        await this._hooks.execAsync('elementProcessed', this, elToProcess);
                         this._process();
                     });
                 }
@@ -117,9 +120,15 @@ export class ExecQueue<
 
             if (this._lastQueueLength > 0) {
                 this._lastQueueLength = 0;
-                this._execEvent('queueProcessed');
+                this._isQueueProcessedHookExecuting = true;
+                await this._hooks.execAsync('queueProcessed', this);
+                this._isQueueProcessedHookExecuting = false;
             }
         }
+    }
+
+    public on(eventName: keyof IExecQueueEvents<QueueEl>, callback: IExecQueueEvents<QueueEl>[typeof eventName]) {
+        this._hooks.on(eventName, callback);
     }
 }
 

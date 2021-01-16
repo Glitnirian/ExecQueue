@@ -1,4 +1,3 @@
-import { EQ_HoldBuffer } from './ExecQueueHoldBufferFeature';
 import { ExecQueue } from './ExecQueue';
 import { HoldBuffers } from './types';
 
@@ -6,7 +5,7 @@ export interface ExecQueueBFEvents {
 
 }
 
-export class ExecQueueBF<QueueEl, ExtraEvents extends {[eventName: string]: any}={}> extends ExecQueue<QueueEl, ExecQueueBFEvents & ExtraEvents> {
+export class ExecQueueBF<QueueEl> extends ExecQueue<QueueEl> {
     protected _holdBuffers: HoldBuffers<QueueEl> = {};
 
     createHoldBuffer(holdBufferName: string) {

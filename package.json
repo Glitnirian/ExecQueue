@@ -29,5 +29,8 @@
   "bugs": {
     "url": "https://github.com/Glitnirian/ExecQueue/issues"
   },
-  "homepage": "https://github.com/Glitnirian/ExecQueue#readme"
+  "homepage": "https://github.com/Glitnirian/ExecQueue#readme",
+  "dependencies": {
+    "hooksi": "^1.0.6"
+  }
 }

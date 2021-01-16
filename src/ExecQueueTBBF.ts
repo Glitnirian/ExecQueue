@@ -16,7 +16,7 @@ export interface ExecQueueTBEvents<QueueEl> {
  * @template QueueEl
  */
 
-export class ExecQueueTBBF<QueueEl> extends ExecQueueBF<QueueEl, ExecQueueTBEvents<QueueEl>> {
+export class ExecQueueTBBF<QueueEl> extends ExecQueueBF<QueueEl> {
     private _autoPauseResume = false;
     private _autoPauseResume_pauseTimeout: number = 500; // default to 0.5s
     private _useAutoResumeByTimeout: boolean = true;
