@@ -82,6 +82,7 @@ export class ExecQueue<QueueEl> {
 
     public setQueue(queue: QueueEl[]) {
         this._queue = queue;
+        this._process();
         return this;
     }
 
