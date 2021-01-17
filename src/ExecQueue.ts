@@ -1,5 +1,6 @@
 import { ExecCallback, HoldBuffers } from './types';
 import { Hooks } from 'hooksi';
+import { PromiseFiber, IPromiseState } from './PromiseFiber';
 
 let resultId = 0;
 
@@ -22,6 +23,7 @@ export class ExecQueue<QueueEl> {
     protected _inProcessingNumber: number = 0;
     protected _hooks: Hooks<IExecQueueEvents<QueueEl>>;
     private _isQueueProcessedHookExecuting: boolean = false;
+    private _allQueueProcessedPromiseFiber: PromiseFiber;
 
     constructor(options?: ExecQueueOptions) {
         options = options || {};
@@ -45,13 +47,16 @@ export class ExecQueue<QueueEl> {
 
     public push(el: QueueEl) {
         this._queue.push(el);
-        this._process();
+        this._checkAndCreateQueueProcessedPromiseFiber();
 
+        this._process();
+        
         return this;
     }
 
     public pushMany(els: QueueEl[]) {
         this._queue = this._queue.concat(els);
+        this._checkAndCreateQueueProcessedPromiseFiber();
         this._process();
         
         return this;
@@ -59,12 +64,14 @@ export class ExecQueue<QueueEl> {
 
     public unshift(el: QueueEl) {
         this._queue.unshift(el);
+        this._checkAndCreateQueueProcessedPromiseFiber();
         this._process();
         return this;
     }
 
     public unshiftMany(els: QueueEl[]) {
         this._queue = els.concat(this._queue);
+        this._checkAndCreateQueueProcessedPromiseFiber();
         this._process();
         return this;
     }
@@ -82,6 +89,7 @@ export class ExecQueue<QueueEl> {
 
     public setQueue(queue: QueueEl[]) {
         this._queue = queue;
+        this._checkAndCreateQueueProcessedPromiseFiber();
         this._process();
         return this;
     }
@@ -122,9 +130,26 @@ export class ExecQueue<QueueEl> {
             if (this._lastQueueLength > 0) {
                 this._lastQueueLength = 0;
                 this._isQueueProcessedHookExecuting = true;
+                this._allQueueProcessedPromiseFiber.resolve();
                 await this._hooks.execAsync('queueProcessed', this);
                 this._isQueueProcessedHookExecuting = false;
             }
+        }
+    }
+
+    public awaitGetAllProcessed() {
+        this._checkAndCreateQueueProcessedPromiseFiber();
+        return this._allQueueProcessedPromiseFiber.await();
+    }
+
+    private _checkAndCreateQueueProcessedPromiseFiber() {
+        if (
+            (
+                this._allQueueProcessedPromiseFiber &&
+                this._allQueueProcessedPromiseFiber.getState() !== IPromiseState.Pending
+            ) || !this._allQueueProcessedPromiseFiber
+        ) {
+            this._allQueueProcessedPromiseFiber = new PromiseFiber(); 
         }
     }
 
